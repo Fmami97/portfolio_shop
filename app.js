@@ -30,8 +30,9 @@ app.use(errorHandler());
 app.use(helmet());
 
 
+
 //generates a new file each month to store logs
-const stream = rfs.createStream(generator, { size: "10M", interval: "30d" })
+const stream = rfs.createStream(generator, { size: "10M", interval: "30d", path: "logs" });
 app.use(morgan('tiny', { stream }))
 
 

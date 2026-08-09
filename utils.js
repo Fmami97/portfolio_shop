@@ -2,16 +2,12 @@ const bcrypt = require("bcrypt");
 
 const pad = num => (num > 9 ? "" : "0") + num;
 //used alongside the rotating-file-stream (rfs) library.
+//generates a new filename for the stream with the provided parameters
 const generator = (time, index) => {
     if (!time) return "file.log";
-
     let datetime = time.getFullYear() + "" + pad(time.getMonth() + 1);
-
-
-    return `logs/${datetime}-${index}-file.log`;
+    return `${datetime}-${index}-file.log`;
 };
-
-
 
 
 
