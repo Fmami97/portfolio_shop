@@ -13,7 +13,8 @@ exports.getProductById = async (id) => {
     return results.rows[0];
 
 }
-
+/*
+//CURRENTLY NOT IN USE FOR THE WEBSITE
 exports.updateProduct = async (id, newProduct, oldProduct) => {
 
     let name = Object.hasOwn(newProduct, "name") ? newProduct.name : oldProduct.name;
@@ -58,3 +59,4 @@ exports.deleteProduct = async (id) => {
     );
     return result.rowCount > 0;
 }
+*/

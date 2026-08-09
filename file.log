@@ -97,3 +97,8 @@ DELETE /v1/products/21 - - - - ms
 GET /v1/products 200 1399 - 156.135 ms
 POST /v1/products 201 73 - 216.666 ms
 GET /v1/products 200 1473 - 58.639 ms
+GET /v1/products 200 1473 - 201.031 ms
+GET /v1/products/21 404 29 - 2.971 ms
+GET /v1/products/1 200 71 - 1.841 ms
+POST /v1/products/ 404 152 - 1.309 ms
+PUT /v1/products/21 404 153 - 0.301 ms
