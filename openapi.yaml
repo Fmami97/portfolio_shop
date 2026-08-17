@@ -4,13 +4,38 @@ info:
   description: An API that is used to manage a shop, create user accounts and handle transactions.
   version: 1.0.0
 
+tags:
+  - name: utility
+
+  - name: products
+    description: requests regarding the shop's products
+  - name: users
+    description: requests regarding the users
+  - name: UserAuth
+    description: requests regarding a specific user's authentication methods
+
 servers:
   - url: http://localhost:8000/v1
 
 paths:
+  /login:
+    post:
+      security:
+        - googleOAuth: [profile]
+        - facebookOAuth: [profile]
+      tags:
+        - utility
+  /docs:
+    get:
+      description: displays this YAML file via the swagger-ui library
+      tags:
+        - utility
+
   # PRODUCT TABLE REQUESTS
   /products:
     get:
+      tags:
+        - products
       summary: List all products in the shop
       operationId: getProducts
       responses:
@@ -42,6 +67,8 @@ paths:
     #             $ref: "#/components/schemas/Product"
   /products/{id}:
     get:
+      tags:
+        - products
       summary: get a single shop product by providing an id
       operationId: getProductById
       parameters:
@@ -59,44 +86,116 @@ paths:
             $ref: "#/components/schemas/Product"
         "404":
           description: product not found
-  #   put:
-  #     summary: updates a product
-  #     operationId: updateProduct
-  #     parameters:
-  #       - name: id
-  #         in: path
-  #         required: true
-  #         schema:
-  #           type: integer
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #         schema:
-  #           $ref: "#/components/schemas/ProductInput"
-  #     responses:
-  #       "200":
-  #         description: the updated product
-  #         content:
-  #           application/json:
-  #           schema:
-  #           $ref: "#/components/schemas/Product"
-  #       "404":
-  #         description: product not found
-  # delete:
-  #   summary: deletes the product with the provided ID
-  #   operationId: deleteProduct
-  #   parameters:
-  #     - name: id
-  #       in: path
-  #       required: true
-  #       schema:
-  #         type: integer
-  #   responses:
-  #     "204":
-  #       description: product deleted successfully
-  #     "404":
-  #       description: product not found
+
+  /users:
+    get:
+      tags:
+        - users
+      summary: get all users from the database, without sensitive data
+      operationId: getUsers
+      responses:
+        "200":
+          description: All users in the database, ordered from most to least recent
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "500":
+          description: server error
+    post:
+      tags:
+        - users
+      summary: Create a new user, once a proper authentication method was provided.
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewUserInput"
+      responses:
+        "201":
+          description: the created user, without the authentication data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/{id}:
+    get:
+      tags:
+        - users
+      summary: get a single user's info, without sensitive data
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: the requested product
+          content:
+            application/json:
+            schema:
+            $ref: "#/components/schemas/Product"
+        "404":
+          description: product not found
+    put:
+      security:
+        - googleOAuth: []
+        - facebookOAuth: []
+      tags:
+        - users
+      summary: updates the user
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+          schema:
+          $ref: "#/components/schemas/UserProfileInput"
+      responses:
+        "200":
+          description: the updated product
+          content:
+            application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+        "404":
+          description: product not found
+
+    delete:
+      security:
+        - googleOAuth: []
+        - facebookOAuth: []
+      tags:
+        - users
+      summary: deletes the user with the selected id
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: user deleted successfully
+        "404":
+          description: user not found
+  /users/{id}/auth:
+    security:
+      - googleOAuth: []
+      - facebookOAuth: []
 components:
   schemas:
     Product:
@@ -104,12 +203,17 @@ components:
       properties:
         id:
           type: integer
+          example: 1
         name:
           type: string
+          example: "tomato sauce"
         price:
           type: number
+          example: 4.90
         description:
           type: string
+          example: "A famous brand of tomato sauce"
+          nullable: true
       required:
         - id
         - name
@@ -126,3 +230,106 @@ components:
       required:
         - name
         - price
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: number
+          example: "Johndoe123"
+        fullname:
+          type: string
+          example: "John doe"
+        created_at:
+          type: string
+          format: date
+          example: "2026-05-17"
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          default: "SQL NOW FUNCTION"
+      required:
+        - id
+        - username
+        - created_at
+    UserAuth:
+      type: object
+      description: at least one of provider_id or password_hash must be present.
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        provider:
+          type: string
+        provider_id:
+          type: string
+          nullable: true
+          description: must be present if password_hash isn't provided
+        password_hash:
+          type: string
+          nullable: true
+          description: must be present if provider_id isn't provided
+      required:
+        - id
+        - user_id
+        - provider
+      anyOf:
+        - required: [provider_id]
+        - required: [password_hash]
+
+    NewUserInput:
+      description: at least one of provider_id or password_hash must be present.
+      type: object
+      properties:
+        fullname:
+          type: string
+        username:
+          type: string
+        provider:
+          type: string
+        provider_id:
+          type: string
+          description: must be present if password_hash isn't provided
+        password_hash:
+          type: string
+          description: must be present if provider_id isn't provided
+      required:
+        - provider
+        - username
+      anyOf:
+        - required: [provider_id]
+        - required: [password_hash]
+
+    UserProfileInput:
+      description: designed to update username and fullname rows in the database
+      type: object
+      properties:
+        fullname:
+          type: string
+        username:
+          type: string
+        password_hash:
+          type: string
+          description: if a password doesn't exist in the database, a new authentication is created instead
+      anyOf:
+        - required: [fullname]
+        - required: [username]
+        - required: [password_hash]
+  securitySchemes:
+    googleOAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/v2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            - profile
+    facebookOAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://www.facebook.com/v10.0/dialog/oauth
+          tokenUrl: https://graph.facebook.com/v10.0/oauth/access_token
+          scopes:
+            - profile

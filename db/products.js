@@ -39,7 +39,7 @@ exports.updateProduct = async (id, newProduct, oldProduct) => {
 }
 
 
-exports.createProduct = async (id, newProduct) => {
+exports.createProduct = async (newProduct) => {
 
     const result = await pool.query('INSERT INTO products(name,price,description) VALUES ($1,$2,$3) RETURNING *',
         [

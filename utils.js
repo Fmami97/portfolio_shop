@@ -13,18 +13,11 @@ const generator = (time, index) => {
 
 // Create password hashing function below:
 //password: the plaintext we need to hash.
-//saltRounds: amount of time needed to calculate the salt
-const passwordHash = async (password, saltRounds) => {
-    try {
-
-        const salt = await bcrypt.genSalt(saltRounds);
-        //hash the password by applying the salt
-        const hash = await bcrypt.hash(password, salt);
-        return hash;
-    } catch (err) {
-        console.log(err);
-    }
-    return null;
+const passwordHash = async (password) => {
+    const salt = await bcrypt.genSalt(10);
+    //hash the password by applying the salt
+    const hash = await bcrypt.hash(password, salt);
+    return hash;
 };
 
 

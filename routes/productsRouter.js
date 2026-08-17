@@ -18,7 +18,7 @@ router.param('id', async (req, res, next, id) => {
     if (!product) {
         return res.status(404).send({ error: 'Product not found' });
     }
-    req.id = id;
+    req.product_id = id;
     req.product = product; // Attach to request
     next();
 });
@@ -26,6 +26,16 @@ router.param('id', async (req, res, next, id) => {
 router.get('/:id', (req, res) => {
     res.status(200).json(req.product); // Use the loaded item
 });
+
+router.get("/", async (req, res) => {
+    try {
+        const result = await db.getProducts(req, res);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).send("Something went wrong, please try again later.");
+    }
+});
+
 
 // router.delete('/:id', async (req, res) => {
 //     try {
@@ -53,7 +63,7 @@ router.get('/:id', (req, res) => {
 //         }
 //     } catch (error) {
 //         console.log(error);
-//         res.status(400).send(error.message || error.msg);
+//         res.status(400).send(error.message || || String(error));
 
 //     }
 // });
@@ -70,18 +80,8 @@ router.get('/:id', (req, res) => {
 //         }
 //     } catch (error) {
 //         console.log(error);
-//         res.status(400).send(error.message || error.msg);
+//         res.status(400).send(error.message || || String(error));
 
 //     }
 // });
-
-router.get("/", async (req, res) => {
-    try {
-        const result = await db.getProducts(req, res);
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(500).send("Something went wrong, please try again later.");
-    }
-});
-
 module.exports = router;
