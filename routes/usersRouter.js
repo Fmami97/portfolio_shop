@@ -102,7 +102,7 @@ router.post('/', sanitizeNewUser, async (req, res) => {
         let userinfo = null
 
         if (token) {
-            userinfo = await db.getUserInfo(provider, token);
+            userinfo = await getUserInfo(provider, token);
         }
 
         const provider_id = userinfo != null ? userinfo.id || userinfo.sub : null;

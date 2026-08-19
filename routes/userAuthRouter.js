@@ -31,7 +31,6 @@ router.get("/", async (req, res) => {
 router.param('provider', async (req, res, next, provider) => {
 
     const userAuth = await db.getUserAuthByProvider(req.user_id, provider);
-    console.log(userAuth)
 
     if (userAuth == null) {
         return res.status(404).send({ error: 'user not found' });
@@ -55,7 +54,6 @@ router.get("/:provider", async (req, res) => {
 //creates or updates the password of the user for the local auth method.
 router.post("/", sanitizePassword, async (req, res) => {
     try {
-        console.log(req.user_id);
         const existingAuth = await db.getUserAuthByProvider(req.user_id, "local");
 
         const newPassword = await passwordHash(req.body.password)

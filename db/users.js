@@ -12,8 +12,8 @@ exports.getUserById = async (id) => {
     return results.rows[0];
 }
 
-exports.getUserLocalAuthByUsername = async (username) => {
-    const results = await pool.query('SELECT  FROM users WHERE username = $1 AND ', [username]);
+exports.getUserByEmail = async (email) => {
+    const results = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     return results.rows[0];
 }
 

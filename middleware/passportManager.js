@@ -26,11 +26,8 @@ const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET;
 
 
 exports.ensureAuthenticated = (req, res, next) => {
-    console.log(req);
-    console.log(req.user);
-    console.log(req.isAuthenticated());
     if (req.isAuthenticated()) {
-        if (req.user.id === req.params.user_id) {
+        if (Number(req.user.id) === Number(req.user_id)) {
             return next();
         }
         return res.status(403).send("Forbidden: You can only view or modify your own data!");
@@ -75,7 +72,7 @@ exports.getUserInfo = async (provider, token) => {
 passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: `http://${API_HOST}:${PORT}/auth/google/callback`,
+    callbackURL: `http://${API_HOST}:${PORT}/v1/auth/google/callback`,
     passReqToCallback: true
 },
     async function (request, accessToken, refreshToken, profile, done) {
@@ -98,7 +95,7 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: FACEBOOK_CLIENT_ID,
     clientSecret: FACEBOOK_CLIENT_SECRET,
-    callbackURL: `http://${API_HOST}:${PORT}/auth/facebook/callback`
+    callbackURL: `http://${API_HOST}:${PORT}/v1/auth/facebook/callback`
 },
     async function (request, accessToken, refreshToken, profile, done) {
         const userAuth = await db.getUserAuthByProviderId(profile.id, "facebook")
