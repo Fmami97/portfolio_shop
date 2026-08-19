@@ -17,13 +17,18 @@ exports.getUserLocalAuthByUsername = async (username) => {
     return results.rows[0];
 }
 
-exports.createUser = async (username, fullname) => {
-    const result = await pool.query('INSERT INTO users (username,fullname) VALUES($1,$2) RETURNING *', [username, fullname]);
+exports.createUser = async (username, fullname, email) => {
+    const result = await pool.query('INSERT INTO users (username,fullname,email) VALUES($1,$2,$3) RETURNING *', [username, fullname, email]);
     return result.rows[0];
 }
 
-exports.updateUser = async (username, fullname, id) => {
-    const result = await pool.query('UPDATE users SET username=$1, fullname=$2 WHERE id=$2 RETURNING *', [username, fullname, id]);
+//cannot update the email entry
+exports.updateUser = async (username, fullname, userToUpdate) => {
+
+    let newUsername = username != null ? username : userToUpdate.username;
+    let newFullname = fullname != null ? fullname : userToUpdate.fullname;
+
+    const result = await pool.query('UPDATE users SET username=$1, fullname=$2 WHERE id=$3 RETURNING *', [newUsername, newFullname, userToUpdate.id]);
     return result.rows[0];
 }
 

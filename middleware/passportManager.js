@@ -5,16 +5,9 @@ const FacebookStrategy = require('passport-facebook').Strategy;
 const LocalStrategy = require('passport-local').Strategy;
 
 
+const { comparePasswords } = require("../utils");
+
 const db = require('../db/db');
-
-exports.ensureAuthenticated = (req, res, next) => {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.status(401).send("User must be authenticated for this action")
-}
-
-
 
 const API_HOST = process.env.API_HOST || "localhost";
 const PORT = process.env.API_PORT || 8000;
@@ -31,6 +24,50 @@ const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET;
 
 
 
+
+exports.ensureAuthenticated = (req, res, next) => {
+    console.log(req);
+    console.log(req.user);
+    console.log(req.isAuthenticated());
+    if (req.isAuthenticated()) {
+        if (req.user.id === req.params.user_id) {
+            return next();
+        }
+        return res.status(403).send("Forbidden: You can only view or modify your own data!");
+    }
+    res.status(401).send("User must be authenticated for this action")
+}
+
+exports.getUserInfo = async (provider, token) => {
+    let result = null
+    if (provider == "google") {
+        result = await fetch("https://www.googleapis.com/oauth2/v1/userinfo", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        if (!result.ok) {
+            throw new Error("Something went wrong when fetching google's userinfo\nthe provided token may be faulty");
+        }
+        return result.json();
+    }
+    else if (provider == "facebook") {
+        result = await fetch('https://graph.facebook.com/me?fields=id', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        if (!result.ok) {
+            throw new Error("Something went wrong when fetching facebook's userinfo\nthe provided token may be faulty");
+        }
+        return result.json();
+    }
+    else {
+        throw new Error("Invalid provider, please use google or facebook");
+    }
+}
+
+
 /*
  * Passport Configurations
 */
@@ -41,10 +78,15 @@ passport.use(new GoogleStrategy({
     callbackURL: `http://${API_HOST}:${PORT}/auth/google/callback`,
     passReqToCallback: true
 },
-    function (request, accessToken, refreshToken, profile, done) {
-        console.log("PROFILE:", profile)
-        console.log("TOKEN :", accessToken);
-        return done(null, profile);
+    async function (request, accessToken, refreshToken, profile, done) {
+        const userAuth = await db.getUserAuthByProviderId(profile.id || profile.sub, "google")
+
+        if (!userAuth) {
+            return done(null, { profile }, { needsRegistration: true, accessToken });
+        }
+        else {
+            return done(null, { profile }, { needsRegistration: false });
+        }
     }
 
 ));
@@ -58,11 +100,15 @@ passport.use(new FacebookStrategy({
     clientSecret: FACEBOOK_CLIENT_SECRET,
     callbackURL: `http://${API_HOST}:${PORT}/auth/facebook/callback`
 },
-    function (accessToken, refreshToken, profile, done) {
-        console.log("PROFILE:", profile);
+    async function (request, accessToken, refreshToken, profile, done) {
+        const userAuth = await db.getUserAuthByProviderId(profile.id, "facebook")
 
-
-        done(null, profile);
+        if (!userAuth) {
+            return done(null, { profile }, { needsRegistration: true, accessToken });
+        }
+        else {
+            return done(null, { profile }, { needsRegistration: false });
+        }
     }
 ));
 
@@ -70,10 +116,27 @@ passport.use(new FacebookStrategy({
 //the traditionnal username and password authentication  method
 passport.use(new LocalStrategy(
     async function (username, password, done) {
-        const users = await db.getUsers
+        const users = await db.getUsers();
 
+        const existingUser = users.find((user) => user.username === username);
+
+        if (existingUser) {
+            const userAuth = await db.getUserAuthByProvider(existingUser.id, "local");
+            if (userAuth.hash_password) {
+                const passwordMatched = await comparePasswords(password, userAuth.hash_password)
+                if (passwordMatched) {
+                    return done(null, existingUser);
+                }
+                else {
+                    return done(null, false);
+                }
+            }
+        }
+        return done(null, false);
     }
 ));
+
+
 passport.serializeUser((user, done) => {
     done(null, user);
 });
@@ -84,4 +147,6 @@ passport.deserializeUser((user, done) => {
 
 
 
-module.exports.passport;
+
+
+module.exports.passport = passport;

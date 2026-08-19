@@ -9,14 +9,27 @@ const pool = require("./pool");
 
 
 
-//returns all authentication methods savec for that specific user
+//returns all authentication methods saved for that specific user
 exports.getUserAuthList = async (user_id) => {
     const results = await pool.query('SELECT id,provider,provider_id,password_hash FROM user_auth WHERE user_id = $1', [user_id]);
     return results.rows;
 }
 
+//same as the method above, but with emails.
+//also gets called without API endpoints
+exports.getUserAuthListByEmail = async (email) => {
+    const results = await pool.query('SELECT user_auth.id,provider,provider_id,password_hash FROM user_auth LEFT JOIN users ON users.id = user_id WHERE users.email = $1', [email]);
+    return results.rows;
+}
+
+//meant for oauth login
+exports.getUserAuthByProviderId = async (provider_id, provider) => {
+    const result = await pool.query('SELECT id,provider,provider_id FROM user_auth WHERE provider_id = $1 AND provider=$2', [provider_id, provider]);
+    return result.rows[0]
+}
+
 exports.getUserAuthByProvider = async (user_id, provider) => {
-    const results = await pool.query('SELECT id,provider,provider_id,password_hash FROM user_auth WHERE user_id = $1 AND provider=$2', [user_id, provider]);
+    const result = await pool.query('SELECT id,provider,provider_id,password_hash FROM user_auth WHERE user_id = $1 AND provider=$2', [user_id, provider]);
     return result.rows[0]
 }
 

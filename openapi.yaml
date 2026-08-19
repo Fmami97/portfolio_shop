@@ -21,8 +21,8 @@ paths:
   /login:
     post:
       security:
-        - googleOAuth: [profile]
-        - facebookOAuth: [profile]
+        - googleOAuth: [profile, email]
+        - facebookOAuth: [profile, email]
       tags:
         - utility
   /docs:
@@ -242,6 +242,9 @@ components:
         fullname:
           type: string
           example: "John doe"
+        email:
+          type: string
+          example: "jdoe123@gmail.com"
         created_at:
           type: string
           format: date
@@ -276,10 +279,17 @@ components:
         - provider
       anyOf:
         - required: [provider_id]
-        - required: [password_hash]
+        - required: [password]
+
+    NewUserAuthPassword:
+      type: object
+      properties:
+        password: type_string
+      required:
+        - password
 
     NewUserInput:
-      description: at least one of provider_id or password_hash must be present.
+      description: at least one of provider_id or password must be present.
       type: object
       properties:
         fullname:
@@ -288,34 +298,31 @@ components:
           type: string
         provider:
           type: string
+          description: defaults to local if left empty
         provider_id:
           type: string
-          description: must be present if password_hash isn't provided
-        password_hash:
+          description: must be present if password isn't provided
+        password:
           type: string
           description: must be present if provider_id isn't provided
       required:
-        - provider
         - username
+        - email
       anyOf:
         - required: [provider_id]
-        - required: [password_hash]
+        - required: [password]
 
     UserProfileInput:
       description: designed to update username and fullname rows in the database
       type: object
       properties:
-        fullname:
-          type: string
         username:
           type: string
-        password_hash:
+        fullname:
           type: string
-          description: if a password doesn't exist in the database, a new authentication is created instead
       anyOf:
-        - required: [fullname]
         - required: [username]
-        - required: [password_hash]
+        - required: [fullname]
   securitySchemes:
     googleOAuth:
       type: oauth2
@@ -325,6 +332,7 @@ components:
           tokenUrl: https://oauth2.googleapis.com/token
           scopes:
             - profile
+            - email
     facebookOAuth:
       type: oauth2
       flows:
@@ -333,3 +341,4 @@ components:
           tokenUrl: https://graph.facebook.com/v10.0/oauth/access_token
           scopes:
             - profile
+            - email

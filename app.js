@@ -48,7 +48,7 @@ app.use(morgan('tiny', { stream }))
 //setting up the session and passport strategies
 app.use(
     session({
-        secret: SESSION_SECRET,
+        secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: { maxAge: 60 * 60 * 1000 }
@@ -75,7 +75,7 @@ app.get('/', (req, res) => {
     res.redirect('/v1/docs');
 });
 
-//all routes not handled by
+//all routes not handled by the backend goes to the frontend
 // app.get('*', (req, res) => {
 //   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 // });
