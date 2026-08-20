@@ -15,7 +15,7 @@
 ## Project information
 
 - **AUTHOR** : Francesco Mami (https://github.com/fmami97)
-- **DESCRIPTION** : An API that provides endpoints to a database to handle a simple shop, with simulated transactions with the Stripe API.
+- **DESCRIPTION** : A web app that connects to a database to handle a simple shop, with simulated transactions with the Stripe API.
   users are authenticated via traditionnal username / password or with a Oauth2 provider (google or facebook).
 - **DATE OF CREATION**: May 2026
 
@@ -76,7 +76,6 @@ These are the external API's I have used
 
 - [the google's oauth authentication](https://developers.google.com/terms/)
 - [the facebook oauth authentication](https://developers.facebook.com/terms/)
-- [the haveibeenpwned.com API](https://haveibeenpwned.com/API/v3) which is under [creative commons 4.0 license](https://creativecommons.org/licenses/by/4.0/)
 - [express's version of the OpenAPI's swagger-ui tool](https://www.npmjs.com/package/swagger-ui-express) which is under [Apache 2.0 license](https://github.com/swagger-api/swagger-ui?tab=Apache-2.0-1-ov-file)
 - [Stripe's API designed for Node](https://github.com/stripe/stripe-node) which is under MIT license(https://github.com/stripe/stripe-node/blob/master/LICENSE)
   All trademaks and copyrighs are property of their respective owners.
@@ -84,6 +83,6 @@ These are the external API's I have used
 ## License
 
 This project's aim is purely for academic / personal use only, none of the data provided
-is linked to real persons.
+is linked to real persons, the initial data was generated via the [mockaroo](www.mockaroo.com) website.
 
 You are allowed to view and share this project, but do not use it commercially

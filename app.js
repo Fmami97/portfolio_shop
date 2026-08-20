@@ -1,6 +1,6 @@
 const usersRouter = require("./routes/usersRouter");
 const productsRouter = require("./routes/productsRouter");
-const authRouter = require("./routes/authRouter");
+const authRouter = require("./routes/utilityRouter.js");
 const express = require("express");
 
 //libraries to host the documentation of the project

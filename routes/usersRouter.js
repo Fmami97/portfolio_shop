@@ -13,6 +13,8 @@ const { comparePasswords, passwordHash } = require("../utils");
 
 const userAuthRouter = require('./userAuthRouter');
 
+const cartRouter = require('./cartRouter');
+
 
 
 //IMPORTANT: in the frontend, you cannot send an empty string 
@@ -44,25 +46,27 @@ router.get("/", async (req, res) => {
 })
 
 
-router.param('id', async (req, res, next, id) => {
-    const user = await db.getUserById(id);
+router.param('user_id', async (req, res, next, user_id) => {
+    const user = await db.getUserById(user_id);
     if (!user) {
         return res.status(404).send({ error: 'user not found' });
     }
-    req.user_id = id;
+    req.user_id = user_id;
     req.requestedUser = user; // Attach to request
     next();
 });
 
 
-router.use("/:id/auth", ensureAuthenticated, userAuthRouter);
+router.use("/:user_id/auth", ensureAuthenticated, userAuthRouter);
+
+router.use("/:user_id/cart", ensureAuthenticated, cartRouter);
 
 
-router.get("/:id", async (req, res) => {
+router.get("/:user_id", async (req, res) => {
     res.status(200).json(req.requestedUser);
 });
 
-router.delete('/:id', ensureAuthenticated, async (req, res) => {
+router.delete('/:user_id', ensureAuthenticated, async (req, res) => {
     try {
         const success = await db.deleteUser(req.user_id)
         if (!success) {
@@ -76,8 +80,8 @@ router.delete('/:id', ensureAuthenticated, async (req, res) => {
 });
 
 
-// for a password change, it must be done in the /users/:id/auth route
-router.put('/:id', ensureAuthenticated, sanitizeUpdateUser, async (req, res) => {
+// for a password change, it must be done in the /users/:user_id/auth route
+router.put('/:user_id', ensureAuthenticated, sanitizeUpdateUser, async (req, res) => {
     try {
         const updatedUser = await db.updateUser(req.body.username, req.body.fullname, req.requestedUser);
         if (!updatedUser) {

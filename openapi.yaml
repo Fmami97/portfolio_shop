@@ -65,14 +65,14 @@ paths:
     #         application/json:
     #           schema:
     #             $ref: "#/components/schemas/Product"
-  /products/{id}:
+  /products/{product_id}:
     get:
       tags:
         - products
       summary: get a single shop product by providing an id
       operationId: getProductById
       parameters:
-        - name: id
+        - name: product_id
           in: path
           required: true
           schema:
@@ -122,14 +122,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-  /users/{id}:
+  /users/{user_id}:
     get:
       tags:
         - users
       summary: get a single user's info, without sensitive data
       operationId: getUserById
       parameters:
-        - name: id
+        - name: user_id
           in: path
           required: true
           schema:
@@ -192,7 +192,7 @@ paths:
           description: user deleted successfully
         "404":
           description: user not found
-  /users/{id}/auth:
+  /users/{user_id}/auth:
     security:
       - googleOAuth: []
       - facebookOAuth: []

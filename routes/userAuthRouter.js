@@ -63,14 +63,14 @@ router.post("/", sanitizePassword, async (req, res) => {
             provider = await db.createUserAuthByLocal(req.user_id, newPassword);
 
             if (provider) {
-                res.status(200).send("password created successfully!");
+                res.status(201).send("password created successfully!");
                 return
             }
         }
         else {
             provider = await db.updateUserAuthPassword(req.user_id, newPassword, existingAuth.id);
             if (provider) {
-                res.status(200).send("password updated successfully!");
+                res.status(201).send("password updated successfully!");
                 return
             }
         }

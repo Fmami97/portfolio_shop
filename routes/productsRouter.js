@@ -13,17 +13,17 @@ const db = require("../db/db");
 //     body('price').optional().isFloat().toFloat(),
 // ]);
 
-router.param('id', async (req, res, next, id) => {
-    const product = await db.getProductById(id);
+router.param('product_id', async (req, res, next, product_id) => {
+    const product = await db.getProductById(product_id);
     if (!product) {
         return res.status(404).send({ error: 'Product not found' });
     }
-    req.product_id = id;
+    req.product_id = product_id;
     req.product = product; // Attach to request
     next();
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:product_id', (req, res) => {
     res.status(200).json(req.product); // Use the loaded item
 });
 
@@ -37,7 +37,7 @@ router.get("/", async (req, res) => {
 });
 
 
-// router.delete('/:id', async (req, res) => {
+// router.delete('/:product_id', async (req, res) => {
 //     try {
 //         const success = await db.deleteProduct(req.id)
 //         if (!success) {
@@ -51,7 +51,7 @@ router.get("/", async (req, res) => {
 // });
 
 
-// router.put('/:id', sanitizeNewProduct, async (req, res) => {
+// router.put('/:product_id', sanitizeNewProduct, async (req, res) => {
 
 //     try {
 //         const updatedProduct = await db.updateProduct(req.id, req.body, req.product);

@@ -4,12 +4,12 @@ const pool = require("./pool");
 
 exports.calculateOrderTotalPrice = async (order_id) => {
     const result = await pool.query('SELECT SUM(quantity * price) AS total_price FROM order_items WHERE order_id = $1', [order_id]);
-    return result.rows[0];
+    return result.rows[0].total_price;
 }
 
 //used for display in the desired order details
 exports.getOrderItems = async (order_id) => {
-    const result = await pool.query('SELECT products.name, products.description ,order_items.price,order_items.quantity, (order_items.price*order_items.quantity) as "total_price"   FROM order_items JOIN PRODUCTS ON products.id = product_id  WHERE order_id = $1',
+    const result = await pool.query('SELECT name, description ,price,quantity, (price*quantity) as "total_price" FROM order_items WHERE order_id = $1',
         [order_id]);
     return result.rows;
 }
