@@ -54,11 +54,8 @@ router.get("/:order_id", async (req, res, next) => {
 
 router.put("/:order_id", sanitizeNewStatus, async (req, res) => {
     try {
-        const validStatuses = ['&#X27;PENDING&#X27;', '&#X27;DELIVERY&#X27;', '&#X27;COMPLETED&#X27;'];
+        const validStatuses = ['PENDING', 'DELIVERY', 'COMPLETED'];
         const status = req.body.status.toUpperCase();
-
-        console.log(status.toString());
-        console.log(validStatuses);
 
         if (!validStatuses.includes(status.toString())) {
             throw new Error(`Invalid status, use the correct syntax from one of the available statuses \n( \' ${validStatuses[0]}\',\' ${validStatuses[1]}\',\' ${validStatuses[2]}\')`)

@@ -59,7 +59,6 @@ router.param('user_id', async (req, res, next, user_id) => {
 
 
 router.use("/:user_id/auth", ensureAuthenticated, userAuthRouter);
-
 router.use("/:user_id/cart", ensureAuthenticated, cartsRouter);
 router.use("/:user_id/orders", ensureAuthenticated, ordersRouter);
 

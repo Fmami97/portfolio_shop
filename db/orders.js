@@ -4,7 +4,7 @@ const pool = require("./pool");
 
 //used for display in the desired order details
 exports.getOrdersByUserId = async (user_id) => {
-    const result = await pool.query('SELECT * FROM orders WHERE user_id = $1',
+    const result = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
         [user_id]);
     return result.rows;
 }

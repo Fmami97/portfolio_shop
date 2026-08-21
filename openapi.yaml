@@ -6,14 +6,17 @@ info:
 
 tags:
   - name: utility
-
+    description: other requests that handles sessions or info
   - name: products
     description: requests regarding the shop's products
   - name: users
     description: requests regarding the users
-  - name: UserAuth
-    description: requests regarding a specific user's authentication methods
-
+  - name: userAuth
+    description: requests regarding a specific user's authentication methods  (AUTHENTICATION REQUIRED)
+  - name: cart
+    description: requests regarding an user's shopping cart, automatically created if it doesn't exist (AUTHENTICATION REQUIRED)
+  - name: orders
+    description: requests regarding each user's transactions (AUTHENTICATION REQUIRED)
 servers:
   - url: http://localhost:8000/v1
 
@@ -30,8 +33,6 @@ paths:
       description: displays this YAML file via the swagger-ui library
       tags:
         - utility
-
-  # PRODUCT TABLE REQUESTS
   /products:
     get:
       tags:
@@ -49,22 +50,6 @@ paths:
                   $ref: "#/components/schemas/Product"
         "500":
           description: server error
-    # post:
-    #   summary: Create a new product
-    #   operationId: createProduct
-    #   requestBody:
-    #     required: true
-    #     content:
-    #       application/json:
-    #         schema:
-    #           $ref: "#/components/schemas/ProductInput"
-    #   responses:
-    #     "201":
-    #       description: the created product
-    #       content:
-    #         application/json:
-    #           schema:
-    #             $ref: "#/components/schemas/Product"
   /products/{product_id}:
     get:
       tags:
@@ -75,18 +60,16 @@ paths:
         - name: product_id
           in: path
           required: true
-          schema:
-            type: integer
       responses:
         "200":
           description: the requested product
           content:
             application/json:
-            schema:
-            $ref: "#/components/schemas/Product"
+              schema:
+                type: object
+                $ref: "#/components/schemas/Product"
         "404":
           description: product not found
-
   /users:
     get:
       tags:
@@ -95,7 +78,7 @@ paths:
       operationId: getUsers
       responses:
         "200":
-          description: All users in the database, ordered from most to least recent
+          description: All users in the database, ordered from most to least recently created
           content:
             application/json:
               schema:
@@ -136,13 +119,15 @@ paths:
             type: integer
       responses:
         "200":
-          description: the requested product
+          description: the requested user
           content:
             application/json:
-            schema:
-            $ref: "#/components/schemas/Product"
+              schema:
+                $ref: "#/components/schemas/User"
         "404":
-          description: product not found
+          description: user not found
+        "500":
+          description: server error
     put:
       security:
         - googleOAuth: []
@@ -152,7 +137,7 @@ paths:
       summary: updates the user
       operationId: updateUser
       parameters:
-        - name: id
+        - name: user_id
           in: path
           required: true
           schema:
@@ -161,18 +146,19 @@ paths:
         required: true
         content:
           application/json:
-          schema:
-          $ref: "#/components/schemas/UserProfileInput"
+            schema:
+              $ref: "#/components/schemas/UserProfileInput"
       responses:
         "200":
-          description: the updated product
+          description: the updated user
           content:
             application/json:
-            schema:
-              $ref: "#/components/schemas/Product"
+              schema:
+                $ref: "#/components/schemas/User"
         "404":
-          description: product not found
-
+          description: user not found
+        "500":
+          description: server error
     delete:
       security:
         - googleOAuth: []
@@ -182,7 +168,7 @@ paths:
       summary: deletes the user with the selected id
       operationId: deleteUser
       parameters:
-        - name: id
+        - name: user_id
           in: path
           required: true
           schema:
@@ -192,10 +178,285 @@ paths:
           description: user deleted successfully
         "404":
           description: user not found
+        "500":
+          description: server error
   /users/{user_id}/auth:
-    security:
+    get:
+      security:
       - googleOAuth: []
       - facebookOAuth: []
+      tags:
+        - userAuth
+      summary: fetches all auth methods available for that user
+      operationId: getUserAuthList
+      parameters:
+        - name: user_id
+      required: true
+      responses:
+        "200":
+          description: all auth methods available for that user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAuth"
+        "500":
+          description: server error
+    post:
+      security:
+      - googleOAuth: []
+      - facebookOAuth: []
+      tags:
+        - userAuth
+      summary: updates or creates a traditional username/password auth method
+      operationId: updateOrCreateUserAuthPassword
+      parameters:
+        - name: user_id
+      required: true
+      responses:
+        "200":
+          description: all auth methods available for that user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAuth"
+        "500":
+          description: server error
+  /users/{user_id}/auth/{provider}:
+    get:
+      security:
+        - googleOAuth: []
+        - facebookOAuth: []
+      tags:
+        - userAuth
+      summary: requests a specific user authentication method
+      operationId: getUserAuthByProvider
+      parameters:
+        - name: user_id
+        - name: provider
+      responses:
+        "200":
+          description: all auth methods available for that user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAuth"
+        "404":
+          description: user / userAuth not found
+        "500":
+          description: server error
+    delete:
+      security:
+        - googleOAuth: []
+        - facebookOAuth: []      
+      tags:
+        - userAuth
+      summary: deletes the desired authentication  method
+      operationId: deleteUserAuthByProvider
+      parameters:
+        - name: user_id
+        - name: provider
+      responses:
+        "204":
+          description: userAuth deleted successfully
+        "404":
+          description: user / userAuth not found
+        "500":
+          description: server error
+
+
+
+
+  /users/{user_id}/cart:
+    get:
+      security:
+      - googleOAuth: []
+      - facebookOAuth: []
+      tags:
+        - cart
+      summary: fetches the cart's infomations, without its actual items
+      operationId: getCartByUserId
+      parameters:
+        - name: user_id
+      required: true
+      responses:
+        "200":
+          description: the cart's without the items 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        "204":
+          description: cart deleted
+        "401":
+          description: unauthorized without authentication
+        "403":
+          description: forbidden, the user_id doesn't match the current session's user_id
+        "500":
+          description: server error
+
+    delete:
+      security:
+      - googleOAuth: []
+      - facebookOAuth: []
+      tags:
+        - cart
+      summary: delete the user's cart, all cart items are automatically deleted too
+      operationId: deleteCart
+      parameters:
+        - name: user_id
+      required: true
+      responses:
+        "204":
+          description: cart deleted
+        "401":
+          description: unauthorized without authentication
+        "403":
+          description: forbidden, the user_id doesn't match the current session's user_id
+        "500":
+          description: server error
+
+  /users/{user_id}/cart/checkout:
+    post:
+      security:
+      - googleOAuth: []
+      - facebookOAuth: []
+      tags:
+        - cart
+      summary: a combination of many requests to create a new order with all items in the cart
+      operationId: checkout
+      parameters:
+        - name: user_id
+      required: true
+      responses:
+        "200":
+          description: all auth methods available for that user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderWithItems"
+        "401":
+          description: unauthorized without authentication
+        "403":
+          description: forbidden, the user_id doesn't match the current session's user_id
+        "500":
+          description: server error
+  
+
+#TODO: finish this part and utility
+  /users/{user_id}/cart/items:
+    get:
+      security:
+        - googleOAuth: []
+        - facebookOAuth: []
+      tags:
+        - cart
+      summary: requests a specific user authentication method
+      operationId: getUserAuthByProvider
+      parameters:
+        - name: user_id
+        - name: provider
+      responses:
+        "200":
+          description: all auth methods available for that user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAuth"
+        "404":
+          description: user / userAuth not found
+        "500":
+          description: server error
+    delete:
+      security:
+        - googleOAuth: []
+        - facebookOAuth: []      
+      tags:
+        - userAuth
+      summary: deletes the desired authentication  method
+      operationId: deleteUserAuthByProvider
+      parameters:
+        - name: user_id
+        - name: provider
+      responses:
+        "204":
+          description: userAuth deleted successfully
+        "404":
+          description: user / userAuth not found
+        "500":
+          description: server error
+
+
+
+
+
+  /users/{user_id}/order/:
+      get:
+        security:
+          - googleOAuth: []
+          - facebookOAuth: []
+        tags:
+          - orders
+        summary: fetches all orders made by the user
+        operationId: getOrdersByUserId
+        parameters:
+          - name: user_id
+        responses:
+          "200":
+            description: all orders made for that user, ordered by date (earliest to latest order)
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Order'
+          "500":
+            description: server error
+
+  /users/{user_id}/order/{order_id}:
+      get:
+        security:
+          - googleOAuth: []
+          - facebookOAuth: []
+        tags:
+          - orders
+        summary: fetches the order and the items that were bought
+        operationId: getOrderByIds
+        parameters:
+          - name: user_id
+          - name: order_id
+        responses:
+          "200":
+            description: the order and order items
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/OrderWithItems"
+          "404":
+            description: user / order not found
+          "500":
+            description: server error
+      put:
+        security:
+          - googleOAuth: []
+          - facebookOAuth: []      
+        tags:
+          - orders
+        summary: updates the status of the users order
+        operationId: updateOrderStatus
+        parameters:
+          - name: user_id
+          - name: order_id
+        responses:
+          "200":
+            description: the contents of the Order
+            contents:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Order"
+          "404":
+            description: user / order not found
+          "500":
+            description: server error
+
+
 components:
   schemas:
     Product:
@@ -224,7 +485,7 @@ components:
         name:
           type: string
         price:
-          type: float
+          type: number
         description:
           type: string
       required:
@@ -318,11 +579,154 @@ components:
       properties:
         username:
           type: string
+          example: "JoDo31"
         fullname:
           type: string
+          example: "John Doe"
       anyOf:
         - required: [username]
         - required: [fullname]
+
+
+    Cart:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        delivery_address:
+          type: string
+          example: "Hell's kitchen"
+        created_at:
+          type: string
+          format: date
+          example: "2026-05-17"
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          default: "SQL NOW FUNCTION"
+        status:
+          type: string
+          example: "COMPLETED"
+          description: one of these three values -> PENDING ; DELIVERY ; COMPLETED
+        totalprice:
+          type: number
+          example: 20.95
+          description: the sum of all ordered ites
+        
+    CartItem:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 1
+        product_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "tomato sauce"
+        price:
+          type: number
+          example: 4.90
+        description:
+          type: string
+          example: "A famous brand of tomato sauce"
+          nullable: true
+        quantity:
+          type: integer
+          example: 4
+        total_price:
+          type: number
+          example: 19.6
+
+    CartItemInput:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 1
+        product_id:
+          type: integer
+          example: 1
+        quantity:
+          type: integer
+          example: 4   
+      required:
+        - user_id
+        - product_id
+        - quantity
+
+    OrderWithItems:
+      type: object
+      properties:
+        order:
+          $ref: "#/components/schemas/Order"
+        order_items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        delivery_address:
+          type: string
+          example: "Hell's kitchen"
+        created_at:
+          type: string
+          format: date
+          example: "2026-05-17"
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          default: "SQL NOW FUNCTION"
+        status:
+          type: string
+          example: "COMPLETED"
+          description: one of these three values -> PENDING ; DELIVERY ; COMPLETED
+        totalprice:
+          type: number
+          example: 20.95
+          description: the sum of all ordered ites
+
+        
+    OrderItem:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "tomato sauce"
+        price:
+          type: number
+          example: 4.90
+        description:
+          type: string
+          example: "A famous brand of tomato sauce"
+          nullable: true
+        quantity:
+          type: integer
+          example: 4
+
+
+    OrderStatusInput:
+      type: object
+      properties:
+        status:
+          type: string
+          example: PENDING
+          description: one of these three values -> PENDING ; DELIVERY ; COMPLETED
+      required:
+        - status
+       
   securitySchemes:
     googleOAuth:
       type: oauth2
