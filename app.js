@@ -1,6 +1,6 @@
 const usersRouter = require("./routes/usersRouter");
 const productsRouter = require("./routes/productsRouter");
-const authRouter = require("./routes/utilityRouter.js");
+const utilityRouter = require("./routes/utilityRouter.js");
 const express = require("express");
 
 //libraries to host the documentation of the project
@@ -64,7 +64,7 @@ app.use("/v1/docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 app.use("/v1/users", usersRouter);
 app.use("/v1/products", productsRouter);
-app.use("/v1/auth", authRouter);
+app.use("/v1/auth", utilityRouter);
 
 
 

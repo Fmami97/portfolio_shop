@@ -4,6 +4,8 @@ const router = express.Router();
 
 const db = require("../db/db");
 
+const { formatError } = require("../utils");
+
 
 // const { validate } = require("./routerUtils");
 // const { body } = require('express-validator');
@@ -32,7 +34,7 @@ router.get("/", async (req, res) => {
         const result = await db.getProducts(req, res);
         res.status(200).json(result);
     } catch (error) {
-        res.status(500).send("Something went wrong, please try again later.");
+        res.status(500).send(formatError(error));
     }
 });
 
@@ -46,7 +48,7 @@ router.get("/", async (req, res) => {
 //             res.status(204);
 //         }
 //     } catch (error) {
-//         res.status(404).send(error.message || String(error));
+//         res.status(404).send(formatError(error));
 //     }
 // });
 

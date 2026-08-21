@@ -34,4 +34,8 @@ const comparePasswords = async (password, hash) => {
 };
 
 
-module.exports = { generator, passwordHash, comparePasswords };
+const formatError = (error) => {
+    return error.message || error.msg || String(error);
+}
+
+module.exports = { generator, passwordHash, comparePasswords, formatError };

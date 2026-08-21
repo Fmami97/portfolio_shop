@@ -6,6 +6,7 @@ const { body } = require('express-validator');
 
 const db = require("../db/db");
 
+const { formatError } = require("../utils");
 const router = express.Router({ mergeParams: true });
 
 //making sure the quantity is a positive number and higher than zero
@@ -13,14 +14,20 @@ const sanitizeNewQuantity = validate([
     body('quantity').isInt({ min: 1 }).withMessage("Invalid quantity").toInt(),
 ]);
 
+const sanitizeNewQuantities = validate([
+    body('cart_items.*.product_id').isInt({ min: 1 }).withMessage("product doesn't exist").toInt(),
+    body('cart_items.*.quantity').isInt({ min: 1 }).withMessage("Invalid quantity").toInt()
+]);
+
+
 
 //retrieves all cart items from the cart 
 router.get("/", async (req, res) => {
     try {
-        const result = await db.getCartItems(req.cart_id);
+        const result = await db.getCartItems(req.user_id);
         res.status(200).json(result);
     } catch (error) {
-        res.status(500).send(error.message || String(error))
+        res.status(500).send(formatError(error))
     }
 })
 
@@ -46,25 +53,32 @@ router.get("/:product_id", async (req, res) => {
 
 router.post("/", sanitizeNewQuantity, async (req, res) => {
     try {
-        const result = await db.createCartItem(req.user_id, req.product_id, req.body.quantity);
+        const result = await db.createCartItem(req.user_id, req.body.product_id, req.body.quantity);
         res.status(201).json(result);
     } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message || String(error));
+        res.status(400).send(formatError(error));
     }
 })
 
-router.put("/", sanitizeNewQuantity, async (req, res) => {
+router.put("/:product_id", sanitizeNewQuantity, async (req, res) => {
     try {
         const result = await db.updateCartItem(req.user_id, req.product_id, req.body.quantity);
         res.status(200).json(result);
     } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message || String(error));
+        res.status(400).send(formatError(error));
     }
 })
 
-router.delete("/", async (req, res) => {
+router.put("/", sanitizeNewQuantities, async (req, res) => {
+    try {
+        const result = await db.updateCartItems(req.user_id, req.body.cart_items);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).send(formatError(error));
+    }
+})
+
+router.delete("/:product_id", async (req, res) => {
     try {
 
         const cartItemDeleted = await db.deleteCartItem(req.user_id, req.product_id);
@@ -73,9 +87,17 @@ router.delete("/", async (req, res) => {
         }
         res.status(204).send();
     } catch (error) {
-        res.status(500).send(error.message || String(error))
+        res.status(500).send(formatError(error))
     }
 })
 
+router.delete("/", async (req, res) => {
+    try {
+        const result = await db.deleteCartItems(req.cart.user_id, req.body.product_ids);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).send(formatError(error))
+    }
+})
 
 module.exports = router

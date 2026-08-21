@@ -5,7 +5,7 @@ const { body } = require('express-validator');
 const { validate } = require("./routerUtils");
 
 const db = require("../db/db");
-const { passwordHash } = require("../utils");
+const { passwordHash, formatError } = require("../utils");
 
 
 //IMPORTANT: userAuthRouter.js is a child of userRouter.js
@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
         const result = await db.getUserAuthList(req.user_id);
         res.status(200).json(result);
     } catch (error) {
-        res.status(500).send(error.message || String(error))
+        res.status(500).send(formatError(error))
     }
 })
 
@@ -76,8 +76,7 @@ router.post("/", sanitizePassword, async (req, res) => {
         }
         throw new Error("Wrong input, could not update the password");
     } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message || String(error));
+        res.status(400).send(formatError(error));
     }
 })
 
@@ -96,7 +95,7 @@ router.delete("/:provider", async (req, res) => {
         const result = await db.deleteUserAuth(req.userAuth.id, req.user_id);
         res.status(204).send();
     } catch (error) {
-        res.status(500).send(error.message || String(error))
+        res.status(500).send(formatError(error))
     }
 })
 

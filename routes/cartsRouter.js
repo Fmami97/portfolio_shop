@@ -3,7 +3,6 @@ const express = require("express");
 
 const db = require("../db/db");
 
-
 const cartItemsRouter = require('./cartItemsRouter');
 const { validate } = require("./routerUtils");
 
@@ -11,10 +10,12 @@ const { body } = require("express-validator");
 
 const router = express.Router({ mergeParams: true });
 
+const { formatError } = require("../utils");
+
 
 //making sure the quantity is a positive number and higher than zero
 const sanitizeDeliveryAddress = validate([
-    body('delivery_address').trim().notEmpty().withMessage('delivery address cannot be empty').escape()
+    body('delivery_address').trim().notEmpty().withMessage('delivery address cannot be empty')
 ]);
 
 //middleware that fetches or creates a new cart for the user, then sends it 
@@ -22,16 +23,16 @@ router.use("/", async (req, res, next) => {
     try {
         let result = await db.getCartByUserId(req.user_id);
         //if the cart doesn't exist yet, creates it instead;
-        if (result.rowCount == 0) {
+        if (!result) {
             result = await db.createCartByUserId(req.user_id);
         }
-        if (result.rowCount == 0) {
+        if (!result) {
             throw new Error("Couldn't create the cart with the provided user's id, \nPlease try again later.")
         }
-        req.cart = result.rows[0];
+        req.cart = result;
         next();
     } catch (error) {
-        res.status(500).send(error.message || String(error))
+        res.status(500).send(formatError(error))
     }
 });
 
@@ -44,29 +45,24 @@ router.use("/items", cartItemsRouter);
 
 
 
+//by the way, snake_case is used to represent database columns (such as user_id) and table_names (such as cart_item)
+//camelCase is used to represent variables
 router.post("/checkout", sanitizeDeliveryAddress, async (req, res) => {
     try {
         const delivery_address = req.body.delivery_address;
 
         const cart_items = await db.getCartItems(req.user_id);
-        const orderCreated = await db.createOrder(req.user_id);
+        const orderCreated = await db.createOrder(req.user_id, delivery_address);
 
         if (!orderCreated || orderCreated.rowCount == 0) {
             throw new Error("Error, couldn't create a new Order for checkout");
         }
 
-        const order_items = []
-        for (const item of cart_items) {
-            const itemCreated = await createOrderItem(orderCreated.order_id, item.name, item.quantity, item.price, item.description)
-            if (!itemCreated || itemCreated.rowCount == 0) {
-                throw new Error("Error, couldn't insert an order item for checkout");
-            }
-            order_items.push(itemCreated);
-        }
+        const order_items = await db.createOrderItems(orderCreated.id, cart_items);
 
-        //calculateTotalOrder directly returns the total_price value instead of a row (return result.rows[0].total_price)
-        const total_price = await db.calculateTotalOrder(orderCreated.order_id);
-        const updatedOrder = await db.updateOrderTotalPrice(orderCreated.order_id, total_price);
+        //calculateTotalOrder directly returns the total_price value instead of a row
+        const total_price = await db.calculateOrderTotalPrice(orderCreated.id);
+        const updatedOrder = await db.updateOrderTotalPrice(orderCreated.id, total_price);
 
         if (!updatedOrder || updatedOrder.rowCount == 0) {
             throw new Error("Error, couldn't update total_price entry for the order");
@@ -79,18 +75,18 @@ router.post("/checkout", sanitizeDeliveryAddress, async (req, res) => {
 
         res.status(201).json({ "order": updatedOrder, order_items })
     } catch (error) {
-        res.status(500).send(error.message || String(error));
+        res.status(500).send(formatError(error));
     }
 });
 
 
-//in case the user wants to delete their cart
+//in case the user wants to delete their cart without doing checkout.
 router.delete("/", async (req, res) => {
     try {
-        const result = await db.deleteCart(req.cart.user_id, req.user_id);
+        const result = await db.deleteCart(req.user_id);
         res.status(204).send();
     } catch (error) {
-        res.status(500).send(error.message || String(error))
+        res.status(500).send(formatError(error))
     }
 })
 

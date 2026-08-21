@@ -9,11 +9,12 @@ const db = require("../db/db");
 
 const { ensureAuthenticated, getUserInfo } = require("../middleware/passportManager");
 
-const { comparePasswords, passwordHash } = require("../utils");
+const { comparePasswords, passwordHash, formatError } = require("../utils");
 
 const userAuthRouter = require('./userAuthRouter');
 
-const cartRouter = require('./cartRouter');
+const cartsRouter = require('./cartsRouter');
+const ordersRouter = require('./ordersRouter');
 
 
 
@@ -24,16 +25,16 @@ const cartRouter = require('./cartRouter');
 
 
 const sanitizeNewUser = validate([
-    body('fullname').optional().trim().notEmpty().withMessage('Fullname cannot be empty').escape(),
-    body('username').trim().notEmpty().withMessage('Username cannot be empty').escape(),
-    body('email').trim().isEmail().withMessage('Invalid email input').escape(),
+    body('fullname').optional().trim().notEmpty().withMessage('Fullname cannot be empty'),
+    body('username').trim().notEmpty().withMessage('Username cannot be empty'),
+    body('email').trim().isEmail().withMessage('Invalid email input').toLowerCase(),
     body('password').optional({ nullable: true }).trim().isStrongPassword({ minLength: 10, minUppercase: 1, minLowercase: 1, minSymbols: 1 }).withMessage('Invalid password, make sure the passwords contains at least 10 characters, with at least 1 symbol and 1 lowercase and uppercase letter')
 ]);
 
 
 const sanitizeUpdateUser = validate([
-    body('fullname').optional().trim().notEmpty().withMessage('Fullname cannot be empty').escape(),
-    body('username').optional().trim().notEmpty().withMessage('Username cannot be empty').escape()
+    body('fullname').optional().trim().notEmpty().withMessage('Fullname cannot be empty'),
+    body('username').optional().trim().notEmpty().withMessage('Username cannot be empty')
 ])
 
 router.get("/", async (req, res) => {
@@ -59,7 +60,8 @@ router.param('user_id', async (req, res, next, user_id) => {
 
 router.use("/:user_id/auth", ensureAuthenticated, userAuthRouter);
 
-router.use("/:user_id/cart", ensureAuthenticated, cartRouter);
+router.use("/:user_id/cart", ensureAuthenticated, cartsRouter);
+router.use("/:user_id/orders", ensureAuthenticated, ordersRouter);
 
 
 router.get("/:user_id", async (req, res) => {
@@ -75,7 +77,7 @@ router.delete('/:user_id', ensureAuthenticated, async (req, res) => {
             res.status(204).send();
         }
     } catch (error) {
-        res.status(404).send(error.message || String(error));
+        res.status(404).send(formatError(error));
     }
 });
 
@@ -89,8 +91,7 @@ router.put('/:user_id', ensureAuthenticated, sanitizeUpdateUser, async (req, res
         }
         res.status(200).json(updatedUser).send();
     } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message || String(error));
+        res.status(400).send(formatError(error));
 
     }
 });
@@ -119,7 +120,7 @@ router.post('/', sanitizeNewUser, async (req, res) => {
             throw new Error("Cannot create user with a local auth, there's no password provided");
         }
 
-        const newUser = await db.createUser(req.body.username, req.body.fullname, req.body.email.toLowerCase());
+        const newUser = await db.createUser(req.body.username, req.body.fullname, req.body.email);
         if (!newUser) {
             throw new Error("Couldn't create user, check for proper input or try again later");
         }
@@ -138,8 +139,7 @@ router.post('/', sanitizeNewUser, async (req, res) => {
             res.status(201).json(newUser)
         }
     } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message || String(error));
+        res.status(400).send(formatError(error));
 
     }
 });
