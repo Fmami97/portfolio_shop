@@ -9,7 +9,7 @@ const db = require("../db/db");
 
 const { ensureAuthenticated, getUserInfo } = require("../middleware/passportManager");
 
-const { comparePasswords, passwordHash, formatError } = require("../utils");
+const { passwordHash, formatError } = require("../utils");
 
 const userAuthRouter = require('./userAuthRouter');
 
@@ -57,17 +57,20 @@ router.param('user_id', async (req, res, next, user_id) => {
     next();
 });
 
+//any path that asks a specific user needs for 
+//a proper authentication
+router.use("/:user_id", ensureAuthenticated);
 
-router.use("/:user_id/auth", ensureAuthenticated, userAuthRouter);
-router.use("/:user_id/cart", ensureAuthenticated, cartsRouter);
-router.use("/:user_id/orders", ensureAuthenticated, ordersRouter);
+router.use("/:user_id/auth", userAuthRouter);
+router.use("/:user_id/cart", cartsRouter);
+router.use("/:user_id/orders", ordersRouter);
 
 
 router.get("/:user_id", async (req, res) => {
     res.status(200).json(req.requestedUser);
 });
 
-router.delete('/:user_id', ensureAuthenticated, async (req, res) => {
+router.delete('/:user_id', async (req, res) => {
     try {
         const success = await db.deleteUser(req.user_id)
         if (!success) {
@@ -82,7 +85,7 @@ router.delete('/:user_id', ensureAuthenticated, async (req, res) => {
 
 
 // for a password change, it must be done in the /users/:user_id/auth route
-router.put('/:user_id', ensureAuthenticated, sanitizeUpdateUser, async (req, res) => {
+router.put('/:user_id', sanitizeUpdateUser, async (req, res) => {
     try {
         const updatedUser = await db.updateUser(req.body.username, req.body.fullname, req.requestedUser);
         if (!updatedUser) {

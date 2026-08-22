@@ -74,7 +74,7 @@ router.put("/", sanitizeNewQuantities, async (req, res) => {
         const result = await db.updateCartItems(req.user_id, req.body.cart_items);
         res.status(200).json(result);
     } catch (error) {
-        res.status(400).send(formatError(error));
+        res.status(404).send("one of the products provided doesn't exist");
     }
 })
 
@@ -93,8 +93,14 @@ router.delete("/:product_id", async (req, res) => {
 
 router.delete("/", async (req, res) => {
     try {
-        const result = await db.deleteCartItems(req.cart.user_id, req.body.product_ids);
-        res.status(204).send();
+        const itemsDeleted = await db.deleteCartItems(req.cart.user_id, req.body.product_ids);
+
+        if (itemsDeleted) {
+            res.status(204).send();
+        }
+        else {
+            res.status(404).send("one or multiple products were not found in the cart")
+        }
     } catch (error) {
         res.status(500).send(formatError(error))
     }
