@@ -15,6 +15,8 @@ const bodyParser = require("body-parser");
 const errorHandler = require("errorhandler");
 const helmet = require("helmet");
 
+//libraries to limit the number of requests per IP
+const { rateLimit } = require('express-rate-limit')
 
 //libraries to keep logs of the requests
 const { generator } = require("./utils.js")
@@ -45,6 +47,16 @@ const stream = rfs.createStream(generator, { size: "10M", interval: "30d", path:
 app.use(morgan('tiny', { stream }))
 
 
+//setting up the limit of requests per IP
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, //100 requests allowed each 15 minutes.
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    ipv6Subnet: 60,
+})
+
+
 //setting up the session and passport strategies
 app.use(
     session({
@@ -57,6 +69,11 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+
+// Apply the rate limiting middleware to all requests.
+app.use(limiter)
+
 
 //hosting the documentation with openAPI
 app.use("/v1/docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));

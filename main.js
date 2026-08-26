@@ -1,4 +1,5 @@
-//environment variables
+//environment variables (remove this line in deployment)
+//since all variables will bet set elsewhere
 require('dotenv').config({ path: ".env" });
 const { app } = require("./app.js");
 

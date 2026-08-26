@@ -1,5 +1,7 @@
 # PORTFOLIO PROJECT
 
+**WARNING**: this project is still in development, some functionnalities and file architecture may change in the future
+
 ## Table of Contents
 
 - [Project information](#project-information)

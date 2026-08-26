@@ -1,5 +1,6 @@
 const db = require('../db/db');
 const { passport } = require('../middleware/passportManager')
+const { ensureAuthenticated } = require("../middleware/passportManager");
 
 
 const express = require('express');
@@ -27,7 +28,7 @@ function logAndRedirectUser(req, res, user) {
     });
 }
 
-router.get('/logout', (req, res, next) => {
+router.get('/logout',ensureAuthenticated, (req, res, next) => {
     req.logout(function (err) {
         if (err) { return next(err); }
         res.redirect('/home');

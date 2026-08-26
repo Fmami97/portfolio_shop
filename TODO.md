@@ -1,12 +1,16 @@
-- learn about the Stripe API to simulate a transaction for this website.
+# TODO
 
-in the frontend side:
-when using Oauth, autocomplete and block the email entry.
+## CORS
 
-for authentication, make sure that creating an account inserts both user_auth and user entries at the same time, and also creates a new session automatically.
+disable or restrict the use of CORS when deploying
 
-# STEPS FOR ORDERS
+## ENVIRONMENT VARIABLES
 
-insert a new order
-insert each order item for that order by fetching all necessary data from products and cart_items tables
-use the method calculateOrderTotalPrice to update the order's total_price row with that total
+Make sure to set the environment variables for the project in
+the Deployment tool, also use the proper API URL instead of localhost
+
+## TESTING
+
+## Stripe API
+
+learn about the Stripe API to simulate a transaction for this website.
