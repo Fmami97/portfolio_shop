@@ -6,6 +6,7 @@ const orders = require("./orders");
 const order_items = require("./order_items");
 const carts = require("./carts");
 const cart_items = require("./cart_items");
+const sales = require("./sales");
 
 module.exports = {
     ...users,
@@ -14,5 +15,6 @@ module.exports = {
     ...carts,
     ...cart_items,
     ...orders,
-    ...order_items
+    ...order_items,
+    ...sales
 }

@@ -1,6 +1,7 @@
 const usersRouter = require("./routes/usersRouter");
 const productsRouter = require("./routes/productsRouter");
 const utilityRouter = require("./routes/utilityRouter.js");
+const salesRouter = require("./routes/salesRouter.js");
 const express = require("express");
 
 //libraries to host the documentation of the project
@@ -40,8 +41,6 @@ app.use(cors())
 app.use(errorHandler());
 app.use(helmet());
 
-
-
 //generates a new file each month to store logs
 const stream = rfs.createStream(generator, { size: "10M", interval: "30d", path: "logs" });
 app.use(morgan('tiny', { stream }))
@@ -79,6 +78,7 @@ app.use(limiter)
 app.use("/v1/docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 
+app.use("/v1/sales", salesRouter);
 app.use("/v1/users", usersRouter);
 app.use("/v1/products", productsRouter);
 app.use("/v1/auth", utilityRouter);
