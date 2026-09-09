@@ -5,7 +5,7 @@ const { body } = require('express-validator');
 const { validate } = require("./routerUtils");
 
 const db = require("../db/db");
-const { passwordHash, formatError } = require("../utils");
+const { passwordHash, comparePasswords, formatError } = require("../utils");
 
 
 //IMPORTANT: userAuthRouter.js is a child of userRouter.js
@@ -49,7 +49,22 @@ router.get("/:provider", async (req, res) => {
     }
 })
 
+router.post("/verify_password", sanitizePassword, async (req, res) => {
+    try {
+        const existingAuth = await db.getUserAuthByProvider(req.user_id, "local");
 
+        if (!existingAuth) {
+            return res.status(404).send("User not found");
+        }
+        if (!comparePasswords(req.body.password, existingAuth.password_hash)) {
+            return res.status(401).send("Incorrect password, try again");
+        }
+        return res.status(200).send("Password verified");
+
+    } catch (error) {
+        res.status(400).send(formatError(error));
+    }
+});
 
 //creates or updates the password of the user for the local auth method.
 router.post("/", sanitizePassword, async (req, res) => {

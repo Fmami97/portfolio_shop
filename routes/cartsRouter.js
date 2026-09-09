@@ -52,16 +52,19 @@ router.post("/checkout", sanitizeDeliveryAddress, async (req, res) => {
         const delivery_address = req.body.delivery_address;
 
         const cart_items = await db.getCartItems(req.user_id);
+
+        const sales_items = await db.createSales(cart_items);
+        if (!sales_items || sales_items.rowCount == 0) {
+            throw new Error("Error, couldn't create the sales based on the cart items");
+        }
+
         const orderCreated = await db.createOrder(req.user_id, delivery_address);
 
         if (!orderCreated || orderCreated.rowCount == 0) {
             throw new Error("Error, couldn't create a new Order for checkout");
         }
 
-        const sales_items = await db.createSales(cart_items);
-        if (!sales_items || sales_items.rowCount == 0) {
-            throw new Error("Error, couldn't create the sales based on the cart items");
-        }
+
         const order_items = await db.createOrderItems(orderCreated.id, cart_items);
 
         //calculateTotalOrder directly returns the total_price value instead of a row

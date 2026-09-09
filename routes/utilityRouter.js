@@ -2,15 +2,28 @@ const db = require('../db/db');
 const { passport } = require('../middleware/passportManager')
 const { ensureAuthenticated } = require("../middleware/passportManager");
 
+const { validate } = require("./routerUtils");
+const { body } = require('express-validator');
+const validator = require("validator");
 
 const express = require('express');
 
 const router = express.Router();
 
 
+
+
+const sanitizeLogin = validate([
+    body('login').trim().toLowerCase().custom(value => {
+        return validator.isEmail(value) || value.length !== 0
+    }).withMessage("login must either be an email or an existing username"),
+    body('password').optional({ nullable: true }).trim().isStrongPassword({ minLength: 10, minUppercase: 1, minLowercase: 1, minSymbols: 1 }).withMessage('Invalid password, make sure the passwords contains at least 10 characters, with at least 1 symbol and 1 lowercase and uppercase letter')
+]);
+
+
 //backend route: localhost:8000/v1/login
 //frontend route: localhost:8000/login
-router.post("/login", (req, res, next) => {
+router.post("/login", sanitizeLogin, (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
         if (err || !user) {
             return res.redirect('/login?error=incorrect');
@@ -24,11 +37,13 @@ function logAndRedirectUser(req, res, user) {
         if (err) {
             return res.redirect('/login');
         }
+        //IMPORTANT: redirects won't work without the frontend part doing it's role on the public folder.
+        //responses may be erronous
         return res.redirect('/home');
     });
 }
 
-router.get('/logout',ensureAuthenticated, (req, res, next) => {
+router.get('/logout', ensureAuthenticated, (req, res, next) => {
     req.logout(function (err) {
         if (err) { return next(err); }
         res.redirect('/home');

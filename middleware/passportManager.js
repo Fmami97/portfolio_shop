@@ -4,6 +4,9 @@ const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const LocalStrategy = require('passport-local').Strategy;
 
+const https = require("https");
+
+
 
 const { comparePasswords } = require("../utils");
 
@@ -11,9 +14,6 @@ const db = require('../db/db');
 
 const API_HOST = process.env.API_HOST || "localhost";
 const PORT = process.env.API_PORT || 8000;
-
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -65,6 +65,58 @@ exports.getUserInfo = async (provider, token) => {
 }
 
 
+
+//TODO: finish this method
+exports.revokeToken = async (accessToken, provider) => {
+    if (provider == "google") {
+
+        let postData = "token=" + accessToken;
+        let postOptions = {
+            host: 'oauth2.googleapis.com',
+            port: '443',
+            path: '/revoke',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        };
+
+        // Set up the request
+        const postReq = https.request(postOptions, function (res) {
+            res.setEncoding('utf8');
+            res.on('data', d => {
+                console.log('Response: ' + d);
+            });
+        });
+
+        postReq.on('error', error => {
+            console.log(error)
+        });
+        // Post the request with data
+        postReq.write(postData);
+        postReq.end();
+    }
+
+}
+
+//tokens should contain at least one object of format: {accessToken,provider}
+exports.revokeTokens = async (...tokens) => {
+    if (tokens.length == 0) {
+        throw new Error("No token were provided");
+    }
+
+
+
+    for (let token of tokens) {
+        let tokenRevoked = this.revokeTokens(token.accessToken, token.provider);
+        if (!tokenRevoked) {
+            throw new Error("Failed to revoke one of the tokens provided");
+        }
+    }
+}
+
+
 /*
  * Passport Configurations
 */
@@ -111,16 +163,19 @@ passport.use(new FacebookStrategy({
 
 
 //the traditionnal username and password authentication  method
-passport.use(new LocalStrategy(
-    async function (username, password, done) {
-        const users = await db.getUsers();
+passport.use(new LocalStrategy({
+    usernameField: 'login',
+    passwordField: 'password'
+},
+    async function (login, password, done) {
 
-        const existingUser = users.find((user) => user.username === username);
+        const users = await db.getUsers();
+        const existingUser = users.find((user) => user.username === login || user.email === login);
 
         if (existingUser) {
             const userAuth = await db.getUserAuthByProvider(existingUser.id, "local");
-            if (userAuth.hash_password) {
-                const passwordMatched = await comparePasswords(password, userAuth.hash_password)
+            if (userAuth.password_hash) {
+                const passwordMatched = await comparePasswords(password, userAuth.password_hash);
                 if (passwordMatched) {
                     return done(null, existingUser);
                 }

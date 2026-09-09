@@ -33,6 +33,7 @@
     "prettier": "^3.9.6",
     "rotating-file-stream": "^3.2.9",
     "swagger-ui-express": "^5.0.1",
+    "validator": "^13.15.35",
     "yamljs": "^0.3.0"
   }
 }

@@ -27,11 +27,29 @@ servers:
 paths:
   /auth/login:
     post:
-      description: creates an user session by the usual username / password authentication method
+      description: creates an user session by the usual username OR email / password authentication method
       tags:
         - Authentication
+      summary: creates an user session by the usual username OR email / password authentication method
+      operationId: login
+  /auth/verify_password:
+    post:
+      summary: makes sure the password matches the provided input, used as a verification step before important tasks
+
+      description: makes sure the password matches the provided input, used as a verification step before important tasks
+      tags:
+        - Authentication
+        - Utility
+      operationId: verifyPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewUserAuthPassword"
   /auth/logout:
     get:
+      summary: ends the user's session regardless of authentication method
       description: ends the user's session regardless of authentication method
       security:
         - basicAuth: []
@@ -39,28 +57,34 @@ paths:
         - facebookOAuth: []
       tags:
         - Authentication
+
   /docs:
     get:
+      summary: displays this YAML file via the swagger-ui library
       description: displays this YAML file via the swagger-ui library
       tags:
         - Utility
   /auth/google:
     get:
+      summary: redirects the user to google's authentication services to allow access to the website
       description: redirects the user to google's authentication services to allow access to the website
       tags:
         - Authentication
   /auth/facebook:
     get:
+      summary: redirects the user to facebook's authentication services to allow access to the website
       description: redirects the user to facebook's authentication services to allow access to the website
       tags:
         - Authentication
   /auth/google/callback:
     get:
+      summary: After authentication, creates a user session with the Google OAuth method or redirects to the sign-in page.
       description: After authentication, creates a user session with the Google OAuth method or redirects to the sign-in page.
       tags:
         - Authentication
   /auth/facebook/callback:
     get:
+      summary: After authentication, creates a user session with the Facebook OAuth method or redirects to the sign-in page.
       description: After authentication, creates a user session with the Facebook OAuth method or redirects to the sign-in page.
       tags:
         - Utility
@@ -69,6 +93,7 @@ paths:
       tags:
         - Products
       summary: Retrieves the top 3 most sold products in the database
+      description: Retrieves the top 3 most sold products in the database
       operationId: getBestSales
       responses:
         "200":
@@ -87,6 +112,7 @@ paths:
       tags:
         - Products
       summary: List all products in the shop
+      description: List all products in the shop
       operationId: getProducts
       responses:
         "200":
@@ -104,6 +130,7 @@ paths:
       tags:
         - Products
       summary: get a single shop product by providing an id
+      description: get a single shop product by providing an id
       operationId: getProductById
       parameters:
         - name: product_id
@@ -124,6 +151,7 @@ paths:
       tags:
         - Users
       summary: get all users from the database, without sensitive data
+      description: get all users from the database, without sensitive data
       operationId: getUsers
       responses:
         "200":
@@ -141,6 +169,7 @@ paths:
         - Users
         - Authentication
       summary: Create a new user, once a proper authentication method was provided.
+      description: Create a new user, once a proper authentication method was provided.
       operationId: createUser
       requestBody:
         required: true
@@ -160,6 +189,7 @@ paths:
       tags:
         - Users
       summary: get a single user's info, without sensitive data
+      description: get a single user's info, without sensitive data
       operationId: getUserById
       parameters:
         - name: user_id
@@ -187,6 +217,7 @@ paths:
       tags:
         - Users
       summary: updates the user
+      description: updates the user
       operationId: updateUser
       parameters:
         - name: user_id
@@ -224,6 +255,7 @@ paths:
       tags:
         - Users
       summary: deletes the user with the selected id
+      description: deletes the user with the selected id
       operationId: deleteUser
       parameters:
         - name: user_id
@@ -247,6 +279,7 @@ paths:
       tags:
         - UserAuth
       summary: fetches all auth methods available for that user
+      description: fetches all auth methods available for that user
       operationId: getUserAuthList
       parameters:
         - name: user_id
@@ -296,6 +329,7 @@ paths:
       tags:
         - UserAuth
       summary: updates or creates a traditional username/password auth method
+      description: updates or creates a traditional username/password auth method
       operationId: updateOrCreateUserAuthPassword
       parameters:
         - name: user_id
@@ -334,6 +368,7 @@ paths:
       tags:
         - UserAuth
       summary: requests a specific user authentication method
+      description: requests a specific user authentication method
       operationId: getUserAuthByProvider
       parameters:
         - name: user_id
@@ -370,7 +405,8 @@ paths:
         - facebookOAuth: []
       tags:
         - UserAuth
-      summary: deletes the desired authentication  method
+      summary: deletes the desired authentication method
+      description: deletes the desired authentication method
       operationId: deleteUserAuthByProvider
       parameters:
         - name: user_id
@@ -405,6 +441,7 @@ paths:
       tags:
         - Cart
       summary: fetches the cart's infomations, without its actual items
+      description: fetches the cart's infomations, without its actual items
       operationId: getCartByUserId
       parameters:
         - name: user_id
@@ -438,6 +475,7 @@ paths:
       tags:
         - Cart
       summary: delete the user's cart, all cart items are automatically deleted too
+      description: delete the user's cart, all cart items are automatically deleted too
       operationId: deleteCart
       parameters:
         - name: user_id
@@ -466,6 +504,7 @@ paths:
       tags:
         - Cart
       summary: a combination of many requests to create a new order with all items in the cart
+      description: a combination of many requests to create a new order with all items in the cart
       operationId: checkout
       parameters:
         - name: user_id
@@ -499,6 +538,7 @@ paths:
       tags:
         - CartItems
       summary: fetches all products in the user's cart
+      description: fetches all products in the user's cart
       operationId: getCartItems
       parameters:
         - name: user_id
@@ -532,6 +572,7 @@ paths:
       tags:
         - CartItems
       summary: Adds a new product in the user's cart
+      description: Adds a new product in the user's cart
       operationId: createCartItem
       parameters:
         - name: user_id
@@ -569,6 +610,7 @@ paths:
       tags:
         - CartItems
       summary: updates multiple products's quantities in the cart
+      description: updates multiple products's quantities in the cart
       operationId: updateCartItems
       parameters:
         - name: user_id
@@ -606,6 +648,7 @@ paths:
       tags:
         - CartItems
       summary: deletes all the desired items from the cart
+      description: deletes all the desired items from the cart
       operationId: deleteCartItems
       parameters:
         - name: user_id
@@ -646,6 +689,7 @@ paths:
       tags:
         - CartItems
       summary: fetches all details of a specific product in the cart
+      description: fetches all details of a specific product in the cart
       operationId: getCartItemByIds
       parameters:
         - name: user_id
@@ -686,6 +730,7 @@ paths:
       tags:
         - CartItems
       summary: updates a single product in the cart
+      description: updates a single product in the cart
       operationId: updateCartItem
       parameters:
         - name: user_id
@@ -729,6 +774,7 @@ paths:
       tags:
         - CartItems
       summary: deletes a specific item in the user's cart
+      description: deletes a specific item in the user's cart
       operationId: deleteCartItem
       parameters:
         - name: user_id
@@ -763,6 +809,7 @@ paths:
       tags:
         - Orders
       summary: fetches all orders made by the user
+      description: fetches all orders made by the user
       operationId: getOrdersByUserId
       parameters:
         - name: user_id
@@ -797,6 +844,7 @@ paths:
       tags:
         - Orders
       summary: fetches the order and the items that were bought
+      description: fetches the order and the items that were bought
       operationId: getOrderByIds
       parameters:
         - name: user_id
@@ -834,6 +882,7 @@ paths:
       tags:
         - Orders
       summary: updates the status of the users order
+      description: updates the status of the users order
       operationId: updateOrderStatus
       parameters:
         - name: user_id
